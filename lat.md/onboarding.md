@@ -34,6 +34,14 @@ The confirm view (eyebrow "SETUP", title "Before installing") shows the target p
 
 The progress view (`wide`) shows a step + percent header with a progress bar, then a **fixed-size** terminal log window (`.onboard-terminal`): its body has a constant height and scrolls internally, so streaming log lines never reflow the surrounding layout. The log auto-scrolls to the newest line.
 
+### Existing-install environment handoff
+
+An adopted install wins over the exact inherited `HERMES_HOME` active during selection, preventing restart loops while preserving a different later environment override.
+
+[[src/main/installer.ts#setHermesHomeOverride]] records a one-way fingerprint of that shadowed environment value beside the selected home. On restart, a matching fingerprint activates the saved selection; absent, legacy, and later-different environment values keep the existing precedence.
+
+[[tests/installer-home-override.test.ts]] covers the same-environment handoff, launch-time capture, cleartext-path minimization, legacy precedence, absent environments, later-different environments, and stale selections.
+
 ### Single-run installation
 
 After confirmation, one mounted install screen starts exactly one installer run even if the active locale changes while that run is pending.
