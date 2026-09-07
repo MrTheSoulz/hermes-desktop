@@ -38,9 +38,9 @@ The progress view (`wide`) shows a step + percent header with a progress bar, th
 
 An adopted install wins over the exact inherited `HERMES_HOME` active during selection, preventing restart loops while preserving a different later environment override.
 
-[[src/main/installer.ts#setHermesHomeOverride]] records a one-way fingerprint of that shadowed environment value beside the selected home. On restart, a matching fingerprint activates the saved selection; absent, legacy, and later-different environment values keep the existing precedence.
+[[src/main/installer.ts#setHermesHomeOverride]] records a one-way fingerprint of that shadowed environment value beside the selected home. On restart, a matching fingerprint activates the saved selection only while it remains a desktop-compatible install; absent, legacy, incomplete, and later-different values keep the existing precedence.
 
-[[tests/installer-home-override.test.ts]] covers the same-environment handoff, launch-time capture, cleartext-path minimization, legacy precedence, absent environments, later-different environments, and stale selections.
+[[tests/installer-home-override.test.ts]] covers the same-environment handoff, launch-time capture, cleartext-path minimization, legacy precedence, absent environments, later-different environments, deleted selections, and incomplete installs.
 
 ### Single-run installation
 

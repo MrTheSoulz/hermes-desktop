@@ -9,6 +9,23 @@ import {
 import { tmpdir } from "os";
 import { join } from "path";
 
+function createHermesInstall(home: string): void {
+  const repo = join(home, "hermes-agent");
+  const bin = join(
+    repo,
+    "venv",
+    process.platform === "win32" ? "Scripts" : "bin",
+  );
+  mkdirSync(bin, { recursive: true });
+  if (process.platform === "win32") {
+    writeFileSync(join(bin, "python.exe"), "");
+    writeFileSync(join(bin, "hermes.exe"), "");
+  } else {
+    writeFileSync(join(bin, "python"), "");
+    writeFileSync(join(repo, "hermes"), "");
+  }
+}
+
 describe("Hermes home adoption", () => {
   let testRoot: string;
   let desktopUserData: string;
@@ -24,8 +41,8 @@ describe("Hermes home adoption", () => {
     inheritedHome = join(testRoot, "inherited-home");
     selectedHome = join(testRoot, "selected-home");
     mkdirSync(desktopUserData, { recursive: true });
-    mkdirSync(inheritedHome, { recursive: true });
-    mkdirSync(selectedHome, { recursive: true });
+    createHermesInstall(inheritedHome);
+    createHermesInstall(selectedHome);
     process.env.HERMES_HOME = inheritedHome;
     vi.doMock("electron", () => ({
       app: {
@@ -118,6 +135,20 @@ describe("Hermes home adoption", () => {
     const firstLaunch = await import("../src/main/installer");
     firstLaunch.setHermesHomeOverride(selectedHome);
     rmSync(selectedHome, { recursive: true, force: true });
+
+    vi.resetModules();
+    const restarted = await import("../src/main/installer");
+
+    expect(restarted.HERMES_HOME).toBe(inheritedHome);
+  });
+
+  it("ignores an adopted home whose install becomes incomplete", async () => {
+    const firstLaunch = await import("../src/main/installer");
+    firstLaunch.setHermesHomeOverride(selectedHome);
+    rmSync(join(selectedHome, "hermes-agent", "venv"), {
+      recursive: true,
+      force: true,
+    });
 
     vi.resetModules();
     const restarted = await import("../src/main/installer");

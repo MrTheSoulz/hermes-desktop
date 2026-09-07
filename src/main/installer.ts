@@ -122,8 +122,8 @@ function readHermesHomeOverride(): StoredHermesHomeOverride | null {
     };
     const hermesHome =
       typeof parsed.hermesHome === "string" ? parsed.hermesHome.trim() : "";
-    // Ignore a stale override whose directory no longer exists.
-    if (!hermesHome || !existsSync(hermesHome)) return null;
+    // Ignore an override whose desktop-compatible installation is stale or incomplete.
+    if (!hermesHome || !validateHermesHome(hermesHome)) return null;
     const shadowedHermesHomeHash =
       typeof parsed.shadowedHermesHomeHash === "string"
         ? parsed.shadowedHermesHomeHash.trim()
