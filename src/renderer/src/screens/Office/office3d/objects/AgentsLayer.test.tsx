@@ -2,6 +2,7 @@
 import { render } from "@testing-library/react";
 import type { RefObject } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { agentGatewayActive } from "../core/presence";
 import type { OfficeAgent, RenderAgent } from "../core/types";
 import type { Workstation } from "../layout";
 
@@ -48,9 +49,9 @@ function renderedAgent(): RenderAgent | undefined {
   return modelProbe.lookupRef?.current.get("agent");
 }
 
-function renderedGatewayRunning(): boolean | undefined {
+function renderedGatewayActive(): boolean | undefined {
   const agent = renderedAgent();
-  return agent && "gatewayRunning" in agent ? agent.gatewayRunning : undefined;
+  return agent ? agentGatewayActive(agent) : undefined;
 }
 
 describe("AgentsLayer gateway reconciliation", () => {
@@ -75,11 +76,24 @@ describe("AgentsLayer gateway reconciliation", () => {
       );
 
       const liveBefore = renderedAgent();
-      expect(renderedGatewayRunning()).toBe(before);
+      expect(renderedGatewayActive()).toBe(before);
       expect(liveBefore).toBeDefined();
       if (!liveBefore) throw new Error("expected live render agent");
-      liveBefore.x = 321;
-      liveBefore.frame = 42;
+      const retainedPath = [{ x: 12, y: 34 }];
+      const retainedState: Partial<RenderAgent> = {
+        x: 321,
+        y: 654,
+        targetX: 111,
+        targetY: 222,
+        path: retainedPath,
+        facing: 1.25,
+        frame: 42,
+        walkSpeed: 3,
+        phaseOffset: 0.5,
+        state: "walking",
+        place: "outside",
+      };
+      Object.assign(liveBefore, retainedState);
 
       view.rerender(
         <AgentsLayer
@@ -90,8 +104,9 @@ describe("AgentsLayer gateway reconciliation", () => {
         />,
       );
 
-      expect(renderedGatewayRunning()).toBe(after);
-      expect(renderedAgent()).toMatchObject({ x: 321, frame: 42 });
+      expect(renderedGatewayActive()).toBe(after);
+      expect(renderedAgent()).toMatchObject(retainedState);
+      expect(renderedAgent()?.path).toBe(retainedPath);
     },
   );
 });

@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { createDefaultAgentAvatarProfile } from "../avatars/profile";
 import { AGENT_SCALE, WALK_ANIM_SPEED } from "../core/constants";
 import { toWorld } from "../core/geometry";
-import { agentGatewayActive } from "../core/presence";
+import { applyAgentNameplatePresence } from "../core/presence";
 import { DIVIDER_X } from "../layout";
 import type { JanitorActor, RenderAgent } from "../core/types";
 import { AgentModelProps } from "./types";
@@ -359,28 +359,12 @@ export const AgentModel = memo(function AgentModel({
     const isAway = agent.state === "away";
     // The nameplate dot and pulse reflect gateway connectivity, independent of
     // the Kanban-derived working/idle activity status.
-    const gatewayActive = agentGatewayActive(agent);
-
-    if (statusDotMatRef.current) {
-      statusDotMatRef.current.color.set(
-        isError ? "#ef4444" : gatewayActive ? "#22c55e" : "#f59e0b",
-      );
-    }
-
-    if (pulseRingRef.current && pulseRingMatRef.current) {
-      if (gatewayActive || isError) {
-        const pulse = (Math.sin(agent.frame * 0.05) + 1) / 2;
-        const scale = isError ? 1.25 + pulse * 0.55 : 1.2 + pulse * 0.8;
-        pulseRingRef.current.scale.setScalar(scale);
-        pulseRingMatRef.current.color.set(isError ? "#ef4444" : "#22c55e");
-        pulseRingMatRef.current.opacity = isError
-          ? 0.7 - pulse * 0.3
-          : 0.55 - pulse * 0.45;
-        pulseRingRef.current.visible = true;
-      } else {
-        pulseRingRef.current.visible = false;
-      }
-    }
+    applyAgentNameplatePresence(
+      agent,
+      statusDotMatRef.current,
+      pulseRingRef.current,
+      pulseRingMatRef.current,
+    );
 
     if (awayBubbleRef.current) awayBubbleRef.current.visible = isAway;
     if (bodyMatRef.current) bodyMatRef.current.opacity = isAway ? 0.45 : 1;

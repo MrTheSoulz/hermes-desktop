@@ -1,6 +1,10 @@
 // @vitest-environment node
-import { describe, expect, it } from "vitest";
-import { agentGatewayActive, agentRenderStateChanged } from "./presence";
+import { describe, expect, it, vi } from "vitest";
+import {
+  applyAgentNameplatePresence,
+  agentGatewayActive,
+  agentRenderStateChanged,
+} from "./presence";
 
 describe("Office gateway presence", () => {
   it("shows an online gateway as present even with no running cards", () => {
@@ -40,5 +44,43 @@ describe("Office gateway presence", () => {
       agentRenderStateChanged(offline, { ...offline, position: "ceo" }),
     ).toBe(true);
     expect(agentRenderStateChanged(online, online)).toBe(false);
+  });
+
+  it("applies gateway transitions to the nameplate materials", () => {
+    const dotColor = { set: vi.fn() };
+    const ringScale = { setScalar: vi.fn() };
+    const ringColor = { set: vi.fn() };
+    const ring = { scale: ringScale, visible: true };
+    const ringMaterial = { color: ringColor, opacity: 1 };
+    const agent = {
+      status: "idle" as const,
+      gatewayRunning: false,
+      frame: 0,
+    };
+
+    applyAgentNameplatePresence(agent, { color: dotColor }, ring, ringMaterial);
+    expect(dotColor.set).toHaveBeenLastCalledWith("#f59e0b");
+    expect(ring.visible).toBe(false);
+
+    agent.gatewayRunning = true;
+    applyAgentNameplatePresence(agent, { color: dotColor }, ring, ringMaterial);
+    expect(dotColor.set).toHaveBeenLastCalledWith("#22c55e");
+    expect(ringColor.set).toHaveBeenLastCalledWith("#22c55e");
+    expect(ringScale.setScalar).toHaveBeenCalled();
+    expect(ring.visible).toBe(true);
+
+    agent.gatewayRunning = false;
+    applyAgentNameplatePresence(agent, { color: dotColor }, ring, ringMaterial);
+    expect(ring.visible).toBe(false);
+
+    applyAgentNameplatePresence(
+      { status: "error", gatewayRunning: false, frame: 0 },
+      { color: dotColor },
+      ring,
+      ringMaterial,
+    );
+    expect(dotColor.set).toHaveBeenLastCalledWith("#ef4444");
+    expect(ringColor.set).toHaveBeenLastCalledWith("#ef4444");
+    expect(ring.visible).toBe(true);
   });
 });
