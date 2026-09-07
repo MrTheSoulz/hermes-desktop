@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { createDefaultAgentAvatarProfile } from "../avatars/profile";
 import { AGENT_SCALE, WALK_ANIM_SPEED } from "../core/constants";
 import { toWorld } from "../core/geometry";
+import { agentGatewayActive } from "../core/presence";
 import { DIVIDER_X } from "../layout";
 import type { JanitorActor, RenderAgent } from "../core/types";
 import { AgentModelProps } from "./types";
@@ -356,10 +357,9 @@ export const AgentModel = memo(function AgentModel({
       agent.status === "working";
     const isError = agent.status === "error";
     const isAway = agent.state === "away";
-    // The status dot and pulse ring reflect ONLY the gateway: green when the
-    // agent's gateway is running, amber when idle. A seated idle agent in the
-    // rest room must not light up green.
-    const gatewayActive = agent.status === "working";
+    // The nameplate dot and pulse reflect gateway connectivity, independent of
+    // the Kanban-derived working/idle activity status.
+    const gatewayActive = agentGatewayActive(agent);
 
     if (statusDotMatRef.current) {
       statusDotMatRef.current.color.set(
