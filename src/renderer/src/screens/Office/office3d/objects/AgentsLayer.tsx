@@ -6,6 +6,7 @@ import { RIGGED_EMPLOYEE_URL, RIGGED_MAN_URL } from "./RiggedCharacter";
 import { REST_SEATS, type Workstation, type Seat } from "../layout";
 import { WALK_SPEED } from "../core/constants";
 import { toWorld, worldToCanvas } from "../core/geometry";
+import { agentRenderStateChanged } from "../core/presence";
 import { routeTarget } from "../core/routing";
 import {
   applyCrowdSeparation,
@@ -197,22 +198,14 @@ export const AgentsLayer = memo(function AgentsLayer({
   // useFrame always sees a consistent ref.
   useLayoutEffect(() => {
     const prev = lookupRef.current;
-    // Guard: if every agent already exists with the same status and position,
-    // nothing meaningful changed — keep the current simulation objects so
-    // agents don't teleport or reset their pose on a parent re-render.
+    // Guard: if every agent already carries the same render-relevant metadata,
+    // keep the current simulation objects so agents don't teleport or reset
+    // their pose on a parent re-render.
     let unchanged = agents.length === prev.size;
     if (unchanged) {
       for (const agent of agents) {
         const existing = prev.get(agent.id);
-        const existingPos =
-          existing && "position" in existing
-            ? (existing as unknown as OfficeAgent).position
-            : undefined;
-        if (
-          !existing ||
-          existing.status !== agent.status ||
-          existingPos !== agent.position
-        ) {
+        if (agentRenderStateChanged(existing, agent)) {
           unchanged = false;
           break;
         }

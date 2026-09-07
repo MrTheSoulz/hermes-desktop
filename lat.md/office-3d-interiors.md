@@ -64,6 +64,10 @@ An explicit `gatewayRunning: false` keeps the gateway cue offline even if a runn
 
 Older Office-agent callers without gateway metadata retain the legacy fallback: Working implies gateway presence, while Idle and Error do not.
 
+### Gateway-only live refresh
+
+Polling can change `gatewayRunning` without changing activity or position. Render reconciliation includes gateway presence so nameplate materials receive fresh metadata without resetting agent animation.
+
 ## Collision
 
 People never pass through walls, furniture, or each other: a crowd registry separates overlapping people, and per-place static colliders (wall boxes with door gaps, furniture circles) push walkers out. Buildings are entered through doorways only.
