@@ -24,8 +24,7 @@ describe("Office gateway presence", () => {
     expect(agentGatewayActive({ status: "error" })).toBe(false);
   });
 
-  it("refreshes render state when only gateway presence changes", () => {
-    // @lat: [[office-3d-interiors#Gateway presence#Gateway-only live refresh]]
+  it("detects every render-relevant metadata change", () => {
     const offline = {
       status: "idle" as const,
       gatewayRunning: false,
@@ -34,6 +33,12 @@ describe("Office gateway presence", () => {
     const online = { ...offline, gatewayRunning: true };
 
     expect(agentRenderStateChanged(offline, online)).toBe(true);
+    expect(
+      agentRenderStateChanged(offline, { ...offline, status: "working" }),
+    ).toBe(true);
+    expect(
+      agentRenderStateChanged(offline, { ...offline, position: "ceo" }),
+    ).toBe(true);
     expect(agentRenderStateChanged(online, online)).toBe(false);
   });
 });
